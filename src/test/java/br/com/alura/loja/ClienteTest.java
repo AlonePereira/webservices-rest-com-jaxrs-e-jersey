@@ -21,20 +21,22 @@ import br.com.alura.loja.modelo.Produto;
 public class ClienteTest {
 
     private HttpServer servidor;
+    private Client client;
 
     @Before
     public void startarServidor() {
 	servidor = Servidor.startarServidor();
+	client = ClientBuilder.newClient();
     }
     
     @After
     public void pararServidor() {
 	servidor.stop();
+	client.close();
     }
     
     @Test
     public void testaQueBuscarUmCarrinhoTrazOCarrinhoEsperado() {
-	Client client = ClientBuilder.newClient();
 	WebTarget target = client.target("http://localhost:8080");
 	String conteudo = target.path("/carrinhos/1").request().get(String.class);
 	Carrinho carrinho = (Carrinho) new XStream().fromXML(conteudo);
@@ -44,7 +46,6 @@ public class ClienteTest {
     
     @Test
     public void testaAdicionarUmCarrinhoComSucesso() {
-	Client client = ClientBuilder.newClient();
 	WebTarget target = client.target("http://localhost:8080");
 	
 	Carrinho carrinho = new Carrinho();
@@ -56,7 +57,11 @@ public class ClienteTest {
 	Entity<String> entity = Entity.entity(conteudo, MediaType.APPLICATION_XML);
 	
 	Response response = target.path("/carrinhos").request().post(entity);
-	Assert.assertEquals("<status>sucesso</status>", response.readEntity(String.class));
+	Assert.assertEquals(201, response.getStatus());
+	
+	String location = response.getHeaderString("Location");
+	String conteudoResponse = client.target(location).request().get(String.class);
+	Assert.assertTrue(conteudoResponse.contains("Tablet"));
     }
     
 }

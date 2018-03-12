@@ -21,20 +21,22 @@ import junit.framework.Assert;
 public class ProjetoResourceTest {
 
     private HttpServer servidor;
+    private Client client;
 
     @Before
     public void startarServidor() {
 	servidor = Servidor.startarServidor();
+	client = ClientBuilder.newClient();
     }
     
     @After
     public void pararServidor() {
 	servidor.stop();
+	client.close();
     }
     
     @Test
     public void testaConexacaoComServidor() {
-	Client client = ClientBuilder.newClient();
 	WebTarget target = client.target("http://localhost:8080");
 	String conteudo = target.path("/projetos/1").request().get(String.class);
 	
@@ -45,7 +47,6 @@ public class ProjetoResourceTest {
     
     @Test
     public void testaAdicionarProjeto() {
-	Client client = ClientBuilder.newClient();
 	WebTarget target = client.target("http://localhost:8080");
 	
 	Projeto projeto = new Projeto(3l, "PlasUtil", 2017);
@@ -54,7 +55,11 @@ public class ProjetoResourceTest {
 	Entity<String> entity = Entity.entity(xml, MediaType.APPLICATION_XML);
 	Response response = target.path("/projetos").request().post(entity);
 	
-	Assert.assertEquals("<status>sucesso</status>", response.readEntity(String.class));
+	Assert.assertEquals(201, response.getStatus());
+	
+	String location = response.getHeaderString("Location");
+	String conteudo = client.target(location).request().get(String.class);
+	Assert.assertTrue(conteudo.contains("PlasUtil"));
     }
     
 }
