@@ -8,6 +8,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +28,9 @@ public class ClienteTest {
     @Before
     public void startarServidor() {
 	servidor = Servidor.startarServidor();
-	client = ClientBuilder.newClient();
+	ClientConfig config = new ClientConfig();
+	config.register(new LoggingFilter());
+	client = ClientBuilder.newClient(config);
     }
     
     @After
