@@ -14,8 +14,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.thoughtworks.xstream.XStream;
-
 import br.com.alura.loja.Servidor;
 import br.com.alura.loja.modelo.Projeto;
 import junit.framework.Assert;
@@ -42,9 +40,7 @@ public class ProjetoResourceTest {
     @Test
     public void testaConexacaoComServidor() {
 	WebTarget target = client.target("http://localhost:8080");
-	String conteudo = target.path("/projetos/1").request().get(String.class);
-	
-	Projeto projeto = (Projeto) new XStream().fromXML(conteudo);
+	Projeto projeto = target.path("/projetos/1").request().get(Projeto.class);
 	
 	Assert.assertEquals("Minha loja", projeto.getNome());
     }
@@ -54,16 +50,15 @@ public class ProjetoResourceTest {
 	WebTarget target = client.target("http://localhost:8080");
 	
 	Projeto projeto = new Projeto(3l, "PlasUtil", 2017);
-	String xml = projeto.toXML();
 	
-	Entity<String> entity = Entity.entity(xml, MediaType.APPLICATION_XML);
+	Entity<Projeto> entity = Entity.entity(projeto, MediaType.APPLICATION_XML);
 	Response response = target.path("/projetos").request().post(entity);
 	
 	Assert.assertEquals(201, response.getStatus());
 	
 	String location = response.getHeaderString("Location");
-	String conteudo = client.target(location).request().get(String.class);
-	Assert.assertTrue(conteudo.contains("PlasUtil"));
+	Projeto projetoSalvo = client.target(location).request().get(Projeto.class);
+	Assert.assertEquals("PlasUtil", projetoSalvo.getNome());
     }
     
 }
